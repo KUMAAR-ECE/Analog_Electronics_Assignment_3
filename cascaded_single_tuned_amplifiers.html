@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Effect of Cascading Single-Tuned Amplifiers</title>
+<style>
+:root{--bg:#f2f5f3;--ink:#13313a;--mut:#4d6469;--card:#fff;--ln:#c9d5d2;--ac:#1f6f8b;--hi:#d98e04;--ok:#1b7f4b;--bad:#b3261e}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:56px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Georgia,"Times New Roman",serif}
+header{background:var(--ink);color:#e9f2f0;padding:34px 5vw}
+header h1{margin:0 0 6px;font-size:clamp(1.6rem,4vw,2.5rem);line-height:1.2}
+header p{margin:4px 0;max-width:70ch;color:#bcd3d0}
+nav{position:sticky;top:0;z-index:9;background:#fff;border-bottom:2px solid var(--ink);display:flex;overflow-x:auto;font:600 14px system-ui,sans-serif}
+nav a{padding:14px 14px;white-space:nowrap;color:var(--ink);text-decoration:none}nav a:hover,nav a:focus{background:var(--ink);color:#fff;outline:none}
+main{max-width:980px;margin:auto;padding:10px 5vw 60px}
+section{margin:34px 0}h2{font-size:1.6rem;border-bottom:3px solid var(--hi);padding-bottom:4px}h3{margin:20px 0 4px;color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:6px;padding:14px 18px;margin:12px 0}
+.eq{background:#eef4f3;border-left:4px solid var(--ac);padding:8px 14px;margin:10px 0;overflow-x:auto;font-style:italic;white-space:nowrap}
+.note{border-left:4px solid var(--hi);background:#fff8e6;padding:8px 14px;margin:10px 0;font:14px/1.5 system-ui,sans-serif}
+.tag{font:13px system-ui,sans-serif;color:var(--mut)}
+table{border-collapse:collapse;width:100%;font:14px system-ui,sans-serif;background:#fff;display:block;overflow-x:auto}
+td,th{border:1px solid var(--ln);padding:6px 9px;text-align:left}th{background:#e3edeb}
+canvas,svg{max-width:100%;background:#fff;border:1px solid var(--ln);border-radius:6px}
+button{font:600 14px system-ui,sans-serif;background:var(--ink);color:#fff;border:0;border-radius:4px;padding:8px 14px;cursor:pointer;margin:4px 4px 4px 0}
+button.alt{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.sim{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;font:14px system-ui,sans-serif}
+.sim input[type=range]{width:100%}
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:10px 0;font:14px system-ui,sans-serif}
+.out div{background:#eef4f3;padding:8px 10px;border-radius:4px}.out b{display:block;font-size:1.1rem;color:var(--ac)}
+details{background:#fff;border:1px solid var(--ln);border-radius:6px;margin:8px 0;padding:8px 14px}summary{cursor:pointer;font-weight:bold}
+.q{background:#fff;border:2px solid var(--ln);border-radius:6px;padding:10px 16px;margin:12px 0}
+.q.ok{border-color:var(--ok)}.q.bad{border-color:var(--bad)}.q.na{border-color:var(--hi)}
+.q label{display:block;padding:2px 0;cursor:pointer}.ex{display:none;font:14px/1.5 system-ui,sans-serif;margin-top:6px;color:var(--mut)}
+.bar{background:var(--ac);color:#fff;font:13px system-ui,sans-serif;padding:2px 8px;margin:3px 0;border-radius:3px;white-space:nowrap}
+:focus-visible{outline:3px solid var(--hi)}
+@media print{nav,button,.sim,#simcv{display:none}body{background:#fff}section{break-inside:avoid-page}.ex{display:block!important}details{display:block}}
+</style></head><body>
+<header><h1>Effect of Cascading Single-Tuned Amplifiers</h1>
+<p>Analog Electronics &middot; Unit: Tuned Amplifiers &middot; B.E./B.Tech ECE</p>
+<p><b>You will be able to:</b> derive the n-stage bandwidth BW<sub>n</sub> = BW<sub>1</sub>&radic;(2<sup>1/n</sup>&minus;1); compute the stages needed for a target bandwidth; explain loading, instability and stagger tuning; and solve GATE and interview problems on the topic.</p>
+<p class="tag" style="color:#9fc0bb">All plots are theoretical, computed from the equations in this page. No simulation screenshot or lab measurement is used.</p></header>
+<nav><a href="#intro">Intro</a><a href="#circuit">Circuit</a><a href="#principle">Principle</a><a href="#curves">Curves</a><a href="#math">Equations</a><a href="#sim">Simulator</a><a href="#problems">Problems</a><a href="#quiz">Quiz</a><a href="#gate">GATE</a><a href="#interview">Interview</a><a href="#apps">Applications</a><a href="#revise">Revision</a></nav>
+<main>
+
+<section id="intro"><h2>1. Introduction</h2>
+<p>A <b>single-tuned amplifier</b> uses a parallel LC tank as its collector (or drain) load. The tank is resonant at f<sub>0</sub> = 1/(2&pi;&radic;(LC)), where its impedance is purely resistive and largest (R<sub>p</sub>), so gain peaks at f<sub>0</sub> and falls on either side. <b>Cascading</b> means connecting n identical stages in series, all tuned to the same f<sub>0</sub> (<i>synchronous tuning</i>).</p>
+<p>One stage gives limited gain and limited selectivity. Cascading multiplies gain and steepens the skirts, which is why IF strips and receiver front ends use several stages.</p>
+<p><b>Prerequisites:</b> parallel resonance, Q factor, bandwidth, small-signal BJT/FET model (g<sub>m</sub>, r<sub>o</sub>), the dB scale.</p>
+<table><tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>Half-power (&minus;3 dB) frequencies</td><td>f where gain = peak/&radic;2; BW = f<sub>2</sub> &minus; f<sub>1</sub></td></tr>
+<tr><td>Quality factor Q</td><td>f<sub>0</sub>/BW; unloaded Q is the tank alone, loaded Q includes r<sub>o</sub> and the next stage</td></tr>
+<tr><td>Selectivity / shape factor</td><td>Ability to reject neighbours; shape factor = BW<sub>&minus;60 dB</sub>/BW<sub>&minus;3 dB</sub> (closer to 1 is better)</td></tr>
+<tr><td>Shrinkage factor</td><td>&radic;(2<sup>1/n</sup>&minus;1), BW<sub>n</sub>/BW<sub>1</sub></td></tr>
+<tr><td>Synchronous vs stagger tuning</td><td>All stages at the same f<sub>0</sub> vs stages offset around f<sub>0</sub> to widen and flatten the band</td></tr>
+<tr><td>Classes</td><td>Single-tuned, double-tuned (coupled tanks), stagger-tuned, synchronously tuned cascades</td></tr></table></section>
+
+<section id="circuit"><h2>2. Circuit diagram</h2>
+<svg viewBox="0 0 640 330" width="640" role="img" aria-label="Single-stage tuned CE amplifier" font-family="system-ui" font-size="12" stroke="#13313a" fill="none" stroke-width="1.6">
+<line x1="40" y1="30" x2="400" y2="30"/><text x="42" y="22" fill="#13313a" stroke="none">+Vcc</text>
+<line x1="90" y1="30" x2="90" y2="90"/><rect x="82" y="90" width="16" height="44"/><text x="104" y="116" fill="#13313a" stroke="none">R1</text>
+<line x1="90" y1="134" x2="90" y2="150"/><rect x="82" y="150" width="16" height="44"/><text x="104" y="176" fill="#13313a" stroke="none">R2</text>
+<line x1="90" y1="194" x2="90" y2="290"/><line x1="40" y1="290" x2="560" y2="290"/><text x="42" y="306" fill="#13313a" stroke="none">GND</text>
+<line x1="40" y1="142" x2="52" y2="142"/><line x1="52" y1="130" x2="52" y2="154"/><line x1="58" y1="130" x2="58" y2="154"/><line x1="58" y1="142" x2="90" y2="142"/><text x="30" y="124" fill="#13313a" stroke="none">Vin</text><text x="44" y="170" fill="#13313a" stroke="none">Cin</text>
+<line x1="90" y1="142" x2="190" y2="142"/><line x1="190" y1="142" x2="205" y2="162"/><line x1="190" y1="130" x2="190" y2="154" stroke-width="3"/><line x1="190" y1="148" x2="225" y2="110"/><line x1="190" y1="158" x2="225" y2="196" /><text x="230" y="112" fill="#13313a" stroke="none">Q1 (BJT, CE)</text>
+<line x1="225" y1="110" x2="225" y2="70"/><line x1="225" y1="70" x2="225" y2="30"/>
+<line x1="270" y1="30" x2="270" y2="50"/><rect x="262" y="50" width="16" height="0"/><path d="M270 50 q10 6 0 12 q-10 6 0 12 q10 6 0 12 q-10 6 0 12" /><text x="284" y="76" fill="#13313a" stroke="none">L</text>
+<line x1="320" y1="30" x2="320" y2="80"/><line x1="308" y1="80" x2="332" y2="80"/><line x1="308" y1="86" x2="332" y2="86"/><line x1="320" y1="86" x2="320" y2="110"/><text x="336" y="88" fill="#13313a" stroke="none">C</text><line x1="270" y1="110" x2="320" y2="110"/><line x1="225" y1="110" x2="270" y2="110"/><line x1="270" y1="98" x2="270" y2="110"/>
+<text x="250" y="22" fill="#13313a" stroke="none">tank L||C (Rp at f0)</text>
+<line x1="320" y1="110" x2="410" y2="110"/><line x1="410" y1="98" x2="410" y2="122"/><line x1="416" y1="98" x2="416" y2="122"/><line x1="416" y1="110" x2="460" y2="110"/><text x="460" y="106" fill="#13313a" stroke="none">Vout</text><text x="396" y="140" fill="#13313a" stroke="none">Cc</text>
+<line x1="225" y1="196" x2="225" y2="214"/><rect x="217" y="214" width="16" height="40"/><text x="238" y="238" fill="#13313a" stroke="none">RE</text><line x1="225" y1="254" x2="225" y2="290"/>
+<line x1="270" y1="214" x2="320" y2="214"/><line x1="270" y1="214" x2="270" y2="196"/><line x1="225" y1="205" x2="270" y2="205"/><line x1="295" y1="205" x2="295" y2="215"/><line x1="283" y1="215" x2="307" y2="215"/><line x1="283" y1="221" x2="307" y2="221"/><line x1="295" y1="221" x2="295" y2="290"/><text x="310" y="238" fill="#13313a" stroke="none">CE</text>
+</svg>
+<p class="tag">Schematic is simplified for teaching: the tank sits between V<sub>cc</sub> and the collector; R1/R2 set the bias; R<sub>E</sub> stabilises it and C<sub>E</sub> bypasses R<sub>E</sub> at signal frequency; C<sub>in</sub>, C<sub>c</sub> couple the AC signal.</p>
+<svg viewBox="0 0 640 90" width="640" role="img" aria-label="Cascade of identical stages" font-family="system-ui" font-size="12" stroke="#13313a" fill="#eef4f3" stroke-width="1.6">
+<g><rect x="70" y="20" width="120" height="50"/><rect x="260" y="20" width="120" height="50"/><rect x="450" y="20" width="120" height="50"/></g>
+<g fill="none"><line x1="10" y1="45" x2="70" y2="45"/><line x1="190" y1="45" x2="260" y2="45"/><line x1="380" y1="45" x2="450" y2="45"/><line x1="570" y1="45" x2="630" y2="45"/></g>
+<g fill="#13313a" stroke="none"><text x="85" y="50">Stage 1 (f0,Q)</text><text x="275" y="50">Stage 2 (f0,Q)</text><text x="465" y="50">Stage 3 (f0,Q)</text><text x="10" y="38">Vin</text><text x="590" y="38">Vout</text><text x="196" y="38">C-coupling</text></g></svg>
+
+<table><tr><th>Component</th><th>Role</th><th>Typical/illustrative value</th></tr>
+<tr><td>V<sub>cc</sub></td><td>DC supply</td><td>12 V</td></tr>
+<tr><td>R1, R2</td><td>Voltage-divider bias</td><td>47 k&Omega;, 10 k&Omega;</td></tr>
+<tr><td>R<sub>E</sub>, C<sub>E</sub></td><td>Bias stability; AC bypass</td><td>1 k&Omega;, 10 nF</td></tr>
+<tr><td>C<sub>in</sub>, C<sub>c</sub></td><td>Block DC, pass signal</td><td>10 nF</td></tr>
+<tr><td>L, C</td><td>Tank: sets f<sub>0</sub> = 1/(2&pi;&radic;LC)</td><td>10 &micro;H, 100 pF &rarr; 5.03 MHz</td></tr></table></section>
+
+<section id="principle"><h2>3. Working principle</h2>
+<ol><li><b>DC vs AC.</b> The inductor is a near-short at DC, so the bias sets the Q-point. For signals the collector load is the tank impedance Z(j&omega;).</li>
+<li><b>Single-stage gain.</b> At resonance Z = R<sub>p</sub> (= Q&omega;<sub>0</sub>L), so A<sub>0</sub> = &minus;g<sub>m</sub>R<sub>eff</sub> with R<sub>eff</sub> = R<sub>p</sub> || r<sub>o</sub> || R<sub>in,next</sub>. Away from f<sub>0</sub>, |Z| falls and so does gain.</li>
+<li><b>Cascading.</b> Gains multiply (dB gains add). Each stage attenuates off-resonance signals again, so the combined curve is narrower and steeper.</li>
+<li><b>Trade-off.</b> The gain-bandwidth product of the stage is roughly fixed. Adding stages buys gain and selectivity at the cost of bandwidth.</li>
+<li><b>Loading.</b> The next stage&rsquo;s input resistance (and r<sub>o</sub>) is in parallel with R<sub>p</sub>. This lowers loaded Q, widens each stage, and its input capacitance adds to C and detunes f<sub>0</sub>.</li>
+<li><b>Feedback and stability.</b> C<sub>&mu;</sub> (C<sub>bc</sub>) couples output to input (Miller effect). With high gain and an inductive source or load, this can cause oscillation. Remedies: lower gain per stage, neutralization, cascode, mismatched/tapped coupling.</li>
+<li><b>Stagger tuning.</b> Tuning stages to slightly different frequencies gives a wider, flatter band at the cost of lower peak gain.</li></ol>
+<p><b>Advantages:</b> high gain and selectivity at RF/IF; narrowband noise rejection. <b>Limitations:</b> bandwidth shrinks, alignment is needed, temperature drift detunes, risk of oscillation, inductors are bulky.</p>
+<div class="note"><b>Misconceptions.</b> (1) &ldquo;Cascading increases bandwidth&rdquo; is wrong for synchronous tuning; it reduces it. (2) &ldquo;dB gains multiply&rdquo; is wrong; dB gains add and linear gains multiply. (3) Increasing the number of stages does not reduce f<sub>0</sub>; it changes BW only.</div></section>
+
+<section id="curves"><h2>4. Response curves</h2>
+<p class="tag">Theoretical / illustrative response computed from equations, not a measured or simulated result. Axis: x = 2Qδ = (f&minus;f<sub>0</sub>)/(BW<sub>1</sub>/2), so x = ±1 are the single-stage &minus;3 dB points.</p>
+<canvas id="c1" width="900" height="340"></canvas>
+<canvas id="c2" width="900" height="300"></canvas>
+<h3>Bandwidth shrinkage and shape factor</h3><div id="shr"></div><div id="bars"></div>
+<p class="tag">Shape factor = BW(&minus;60 dB)/BW(&minus;3 dB), with BW(&minus;60 dB) from (1+x<sup>2</sup>)<sup>n</sup> = 10<sup>6</sup>. It improves strongly with n.</p>
+<h3>Synchronous vs stagger-tuned pair</h3>
+<canvas id="c3" width="900" height="300"></canvas>
+<p class="tag">Illustrative: two synchronous stages vs a maximally flat stagger pair (centres at x = ±1), both normalised to 0 dB at f<sub>0</sub>.</p>
+<h3>Time-domain view</h3>
+<canvas id="c4" width="900" height="300"></canvas>
+<p class="tag">Theoretical / illustrative: input (0.2 V peak), inverted output at f<sub>0</sub> for A<sub>0</sub> = 5, and the output at x = 3 (&times;0.316, with extra phase lag arctan 3 &asymp; 71.6&deg;). Computed from the single-stage model, not measured.</p>
+<h3>Optional lab: verify in Multisim</h3>
+<ol><li>Build the CE stage with the tank as collector load; choose L and C for your target f<sub>0</sub>.</li>
+<li>Run AC Analysis, logarithmic sweep spanning about 0.1f<sub>0</sub> to 10f<sub>0</sub> (or a narrow linear sweep around f<sub>0</sub>).</li>
+<li>Use cursors to find the peak gain and the two points 3 dB below it; compute BW<sub>1</sub>.</li>
+<li>Cascade 2, 3, 4 stages (with buffering or coupling caps) and repeat.</li>
+<li>Compare BW<sub>n</sub>/BW<sub>1</sub> with the shrinkage table.</li></ol>
+<p class="tag">Expect trends close to theory but not identical: loading, transistor parasitics and tank resistance shift f<sub>0</sub>, Q and gain. Record your own readings; none are supplied here.</p></section>
+
+<section id="math"><h2>5. Equations and derivations</h2>
+<p><b>Assumptions:</b> identical stages, narrowband (Q &gt; ~10, f near f<sub>0</sub>), negligible inter-stage interaction.</p>
+<h3>Resonance and Q</h3>
+<div class="eq">f<sub>0</sub> = 1/(2&pi;&radic;(LC)); &nbsp; Q = R<sub>p</sub>/(&omega;<sub>0</sub>L) = &omega;<sub>0</sub>CR<sub>p</sub>; &nbsp; Z(f<sub>0</sub>) = R<sub>p</sub></div>
+<p>Admittance Y = 1/R<sub>p</sub> + j&omega;C + 1/(j&omega;L) has zero imaginary part when &omega;<sup>2</sup>LC = 1. Units: f in Hz, L in H, C in F, R in &Omega;.</p>
+<h3>Single-stage gain</h3>
+<p>Y = (1/R<sub>p</sub>)[1 + jR<sub>p</sub>(&omega;C &minus; 1/&omega;L)] = (1/R<sub>p</sub>)[1 + jQ(&omega;/&omega;<sub>0</sub> &minus; &omega;<sub>0</sub>/&omega;)], so</p>
+<div class="eq">A(j&omega;) = A<sub>0</sub> / [1 + jQ(f/f<sub>0</sub> &minus; f<sub>0</sub>/f)] &nbsp;&asymp;&nbsp; A<sub>0</sub>/(1 + j2Q&delta;), &nbsp; &delta; = (f&minus;f<sub>0</sub>)/f<sub>0</sub></div>
+<p>For small &delta;, f/f<sub>0</sub> &minus; f<sub>0</sub>/f &asymp; 2&delta;. The magnitude is |A| = A<sub>0</sub>/&radic;(1+(2Q&delta;)<sup>2</sup>). The &minus;3 dB points are at 2Q&delta; = ±1, so <b>BW<sub>1</sub> = f<sub>0</sub>/Q</b> (also = 1/(2&pi;R<sub>eff</sub>C)).</p>
+<h3>n identical stages</h3>
+<div class="eq">|A<sub>total</sub>| = A<sub>0</sub><sup>n</sup> / (1 + (2Q&delta;)<sup>2</sup>)<sup>n/2</sup>; &nbsp; dB<sub>total</sub> = n &times; dB<sub>1</sub></div>
+<p>Set the ratio to 1/&radic;2: (1+x<sup>2</sup>)<sup>n/2</sup> = 2<sup>1/2</sup> &rArr; x<sup>2</sup> = 2<sup>1/n</sup> &minus; 1, with x = 2Q&delta; = 2Q(f&minus;f<sub>0</sub>)/f<sub>0</sub>. Edge-to-edge BW<sub>n</sub> = 2&delta;f<sub>0</sub> = (f<sub>0</sub>/Q)x:</p>
+<div class="eq">BW<sub>n</sub> = BW<sub>1</sub>&radic;(2<sup>1/n</sup> &minus; 1); &nbsp; Q<sub>n</sub> = f<sub>0</sub>/BW<sub>n</sub> = Q/&radic;(2<sup>1/n</sup> &minus; 1)</div>
+<p>Limit: n = 1 gives 1; as n grows, factor &asymp; &radic;(ln2/n) &rarr; 0. Physical meaning: each stage adds its own roll-off, so the product falls below 1/&radic;2 sooner.</p>
+<div id="shrtab"></div>
+<h3>Loading</h3>
+<div class="eq">R<sub>eff</sub> = R<sub>p</sub> || r<sub>o</sub> || R<sub>in,next</sub>; &nbsp; Q<sub>L</sub> = R<sub>eff</sub>/(&omega;<sub>0</sub>L) = &omega;<sub>0</sub>CR<sub>eff</sub>; &nbsp; BW<sub>1</sub> = f<sub>0</sub>/Q<sub>L</sub></div>
+<h3>Stagger-tuned pair (maximally flat)</h3>
+<p>Two stages centred at x = ±a: |A|<sup>2</sup> &prop; 1/[(1+(x&minus;a)<sup>2</sup>)(1+(x+a)<sup>2</sup>)] = 1/[(1+a<sup>2</sup>)<sup>2</sup> + 2(1&minus;a<sup>2</sup>)x<sup>2</sup> + x<sup>4</sup>]. The x<sup>2</sup> term vanishes for a = 1 (maximal flatness), giving |A| &prop; 1/&radic;(4+x<sup>4</sup>). Normalised, the &minus;3 dB point is x<sup>4</sup> = 4, x = &radic;2, so <b>BW = &radic;2&middot;BW<sub>1</sub></b> with centres at f<sub>0</sub> ± BW<sub>1</sub>/2. At f<sub>0</sub> each stage sits at x = ±1 from its own centre (&minus;3 dB each), so the pair's peak gain is 6 dB below a synchronous pair of equal A<sub>0</sub>.</p>
+<h3>dB</h3><div class="eq">dB = 20&middot;log<sub>10</sub>|A|</div></section>
+
+<section id="sim"><h2>6. Simulator</h2>
+<p class="tag"><b>Theoretical calculator based on the narrowband model.</b></p>
+<div class="sim">
+<label>Stages n: <b id="vn"></b><input id="n" type="range" min="1" max="6" step="1" value="3"></label>
+<label>f<sub>0</sub> (MHz): <b id="vf"></b><input id="f" type="range" min="0.1" max="100" step="0.1" value="10.7"></label>
+<label>Q: <b id="vq"></b><input id="q" type="range" min="5" max="200" step="1" value="50"></label>
+<label>A<sub>0</sub> per stage (linear): <b id="va"></b><input id="a" type="range" min="1" max="200" step="1" value="10"></label></div>
+<button id="rst" class="alt">Reset</button>
+<canvas id="simcv" width="900" height="320"></canvas>
+<div class="out" id="out"></div></section>
+
+<section id="problems"><h2>7. Solved problems</h2>
+<div class="card"><b>P1 (Easy).</b> L = 10 &micro;H, C = 100 pF, R<sub>p</sub> = 20 k&Omega;. Find f<sub>0</sub>, Q, BW.<br>
+f<sub>0</sub> = 1/(2&pi;&radic;(10&times;10<sup>&minus;6</sup>&times;100&times;10<sup>&minus;12</sup>)) = 1/(2&pi;&times;3.162&times;10<sup>&minus;8</sup>) &asymp; <b>5.03 MHz</b>. &omega;<sub>0</sub>L = 3.162&times;10<sup>7</sup>&times;10<sup>&minus;5</sup> = 316.2 &Omega;; Q = 20000/316.2 = <b>63.25</b>; BW = 5.03 MHz/63.25 = <b>79.6 kHz</b> (check: 1/(2&pi;R<sub>p</sub>C) = 79.58 kHz). A high-Q tank is narrow: about 1.6% fractional bandwidth.</div>
+<div class="card"><b>P2 (Moderate).</b> BW<sub>1</sub> = 100 kHz; find BW for n = 3 synchronous stages.<br>
+Factor = &radic;(2<sup>1/3</sup>&minus;1) = &radic;0.2599 = 0.5098, so BW<sub>3</sub> = <b>50.98 kHz</b>. The cascade is about half as wide as one stage.</div>
+<div class="card"><b>P3 (Moderate/Difficult).</b> IF at 10.7 MHz, BW<sub>1</sub> = 400 kHz, each stage 20 dB. Overall BW must be &le; 160 kHz. How many stages? Total gain?<br>
+Need factor &le; 160/400 = 0.40. n = 4: 0.4350 &rarr; 174 kHz (too wide). n = 5: 0.3856 &rarr; <b>154.2 kHz</b> (OK). Total gain = 5&times;20 = <b>100 dB</b> (10<sup>5</sup> linear). Cascade Q<sub>5</sub> = 10.7 MHz/154.2 kHz = 69.4. Real designs also check stability at 100 dB.</div>
+<div class="card"><b>P4 (GATE-style, original).</b> A stage has g<sub>m</sub> = 10 mS, L = 253.3 &micro;H, C = 100 pF, R<sub>p</sub> = 40 k&Omega;, loaded by a following R<sub>in</sub> = 40 k&Omega; (neglect r<sub>o</sub>). Two identical stages are cascaded. Find f<sub>0</sub>, per-stage gain in dB, and overall BW and gain.<br>
+f<sub>0</sub> = 1/(2&pi;&radic;(253.3&micro;&times;100p)) &asymp; 1.000 MHz. R<sub>eff</sub> = 40k||40k = 20 k&Omega;. |A<sub>0</sub>| = 10 mS &times; 20 k&Omega; = 200 &rarr; 46.02 dB. BW<sub>1</sub> = 1/(2&pi;&times;20k&times;100p) = 79.58 kHz; BW<sub>2</sub> = 79.58&times;0.6436 = <b>51.2 kHz</b>. Overall gain = 200<sup>2</sup> = 40,000 &rarr; <b>92.04 dB</b>. Loading halved Q (unloaded Q = 25.1, loaded 12.6) and doubled BW<sub>1</sub>.</div>
+<div class="note">Shortcuts: add dB gains; BW factors from the table (0.644, 0.510, 0.435, 0.386); BW is independent of L when R<sub>eff</sub> and C are fixed.</div></section>
+
+<section id="quiz"><h2>8. Topic quiz (10 questions)</h2>
+<p class="tag">Original practice questions. Difficulty is marked on each.</p>
+<div id="qs"></div><button id="chk">Check answers</button><button id="rq" class="alt">Reset quiz</button><div id="score" style="font:bold 1.1rem system-ui;margin:8px 0"></div></section>
+
+<section id="gate"><h2>8b. GATE practice (10 original questions)</h2>
+<p class="tag">Original GATE-style questions, not previous-year questions. Each explanation says why the correct option works and why the distractors fail.</p>
+<div id="qs2"></div><button id="chk2">Check answers</button><button id="rq2" class="alt">Reset</button><div id="score2" style="font:bold 1.1rem system-ui;margin:8px 0"></div></section>
+
+<section id="interview"><h2>9. Interview questions</h2>
+<details><summary>1. Why does bandwidth shrink when you cascade tuned stages?</summary><p>Each stage multiplies the response, so the product reaches 1/&radic;2 closer to f<sub>0</sub>. BW<sub>n</sub> = BW<sub>1</sub>&radic;(2<sup>1/n</sup>&minus;1). Follow-up: what about gain-bandwidth? Gain rises, BW falls.</p></details>
+<details><summary>2. How do you get wide bandwidth and high gain together?</summary><p>Stagger tuning (or double-tuned stages, or a ceramic/SAW filter plus a wideband gain block). A maximally flat stagger pair gives &radic;2&middot;BW<sub>1</sub> with offsets of &plusmn;BW<sub>1</sub>/2.</p></details>
+<details><summary>3. How does loading affect Q?</summary><p>R<sub>eff</sub> = R<sub>p</sub>||r<sub>o</sub>||R<sub>in</sub> lowers Q<sub>L</sub> and gain and widens BW. Remedy: tap the tank or use a transformer for impedance matching.</p></details>
+<details><summary>4. Why can tuned amplifiers oscillate?</summary><p>Feedback through C<sub>bc</sub> from collector tank to base. With high gain and the right phase at some frequency, the loop gain reaches 1. Fix with neutralization, cascode, lower gain, shielding and good layout.</p></details>
+<details><summary>5. How do you align a multi-stage IF amplifier on the bench?</summary><p>Inject a signal at f<sub>0</sub> at low level (avoid AGC action), tune from the last stage toward the first for maximum output, repeat, then sweep to verify centre and bandwidth. Keep the probe load small.</p></details>
+<details><summary>6. Why might a simulator&rsquo;s AC sweep differ from theory?</summary><p>Loading, transistor capacitances, finite r<sub>o</sub>, tank resistance, bias point changes and the narrowband approximation all shift f<sub>0</sub>, Q and gain.</p></details>
+<details><summary>7. A stage peaks at the wrong frequency after cascading. Why?</summary><p>The next stage&rsquo;s input capacitance adds to C, lowering f<sub>0</sub>. Re-tune or reduce the tank C accordingly.</p></details>
+<details><summary>8. Do dB gains multiply?</summary><p>No, they add. Linear gains multiply.</p></details>
+<details><summary>9. Synchronous vs stagger tuning: trade-offs?</summary><p>Synchronous: highest gain, narrowest BW, easiest alignment logic but steeper peak. Stagger: wider flatter band, lower peak gain, more careful alignment.</p></details>
+<details><summary>10. What drift affects tuned stages in production?</summary><p>Temperature drift of L and C (ferrite cores), transistor capacitance changes with bias, and aging. Mitigate with NP0 capacitors, stable cores, temperature testing and crystal/ceramic filters.</p></details>
+<p><b>Industry perspective:</b> Modern receivers often use a ceramic or crystal filter for selectivity and a few lightly tuned or wideband stages for gain, but the same shrinkage and stability reasoning applies in alignment, validation and RF test.</p></section>
+
+<section id="apps"><h2>10. Applications</h2>
+<ul><li>IF strips: 455 kHz (AM) and 10.7 MHz (FM) superheterodyne receivers, plus TV IF.</li>
+<li>RF front ends and narrowband receivers; wireless links needing channel selection.</li>
+<li>Design issues: alignment, temperature drift, stability, neutralization, ceramic/crystal filters in modern designs, and testing under AGC.</li>
+<li>Roles: RF design, analog design, hardware validation, test engineering, R&amp;D.</li></ul></section>
+
+<section id="revise"><h2>11. Revision sheet</h2>
+<table><tr><th>Item</th><th>Formula / fact</th></tr>
+<tr><td>f<sub>0</sub></td><td>1/(2&pi;&radic;LC)</td></tr><tr><td>Q, BW<sub>1</sub></td><td>R<sub>eff</sub>/(&omega;<sub>0</sub>L); f<sub>0</sub>/Q</td></tr>
+<tr><td>|A| (one stage)</td><td>A<sub>0</sub>/&radic;(1+(2Q&delta;)<sup>2</sup>)</td></tr><tr><td>n stages</td><td>A<sub>0</sub><sup>n</sup>/(1+(2Q&delta;)<sup>2</sup>)<sup>n/2</sup>; dB adds</td></tr>
+<tr><td>BW<sub>n</sub>; Q<sub>n</sub></td><td>BW<sub>1</sub>&radic;(2<sup>1/n</sup>&minus;1); Q/&radic;(2<sup>1/n</sup>&minus;1)</td></tr><tr><td>Stagger pair</td><td>&radic;2&middot;BW<sub>1</sub>, offsets ±BW<sub>1</sub>/2</td></tr></table>
+<table><tr><th></th><th>Synchronous</th><th>Stagger</th></tr><tr><td>Peak gain</td><td>Highest</td><td>Lower</td></tr><tr><td>Bandwidth</td><td>Narrower</td><td>Wider, flatter</td></tr><tr><td>Selectivity</td><td>Sharp</td><td>Moderate</td></tr><tr><td>Alignment</td><td>Simple (one f)</td><td>Needs offsets</td></tr></table>
+<table><tr><th></th><th>Tuned</th><th>Wideband RC-coupled</th></tr><tr><td>Selectivity</td><td>High</td><td>None</td></tr><tr><td>Load</td><td>LC tank</td><td>Resistor</td></tr><tr><td>Use</td><td>RF/IF</td><td>Video/audio</td></tr></table>
+<p><b>Memory aid:</b> &ldquo;Cascade = Gain up, Band down (shrink), dB add.&rdquo; <b>Troubleshooting:</b> detuned peak &rarr; check next-stage capacitance; oscillation &rarr; check C<sub>bc</sub>, grounding, supply decoupling; low gain &rarr; check loading and bias.</p></section>
+<p class="tag">Assumptions: narrowband model, identical non-interacting stages; plots are theoretical. Interactive features need a modern browser with JavaScript.</p>
+</main>
+<script>
+const $=i=>document.getElementById(i),S=n=>Math.sqrt(Math.pow(2,1/n)-1),X60=n=>Math.sqrt(Math.pow(10,6/n)-1);
+const mag=(x,n)=>Math.pow(1+x*x,-n/2),db=v=>20*Math.log10(v);
+const col=['#13313a','#1f6f8b','#d98e04','#1b7f4b','#7a3e9d','#b3261e'];
+function plot(cv,fns,x0,x1,y0,y1,xl,yl){const c=cv.getContext('2d'),W=cv.width,H=cv.height,m=48;c.clearRect(0,0,W,H);c.font='13px system-ui';
+const X=x=>m+(x-x0)/(x1-x0)*(W-m-12),Y=y=>H-m+(y0-y)/(y1-y0)*(H-m-12)*-1;
+c.strokeStyle='#dfe7e5';c.fillStyle='#4d6469';c.lineWidth=1;
+for(let i=0;i<=8;i++){const x=x0+i*(x1-x0)/8;c.beginPath();c.moveTo(X(x),12);c.lineTo(X(x),H-m);c.stroke();c.fillText(+x.toFixed(2),X(x)-12,H-m+16)}
+for(let i=0;i<=4;i++){const y=y0+i*(y1-y0)/4;c.beginPath();c.moveTo(m,Y(y));c.lineTo(W-12,Y(y));c.stroke();c.fillText(+y.toFixed(2),4,Y(y)+4)}
+c.fillText(xl,W/2-60,H-8);c.fillText(yl,m+6,24);
+fns.forEach((f,k)=>{c.strokeStyle=f.c;c.lineWidth=2;c.beginPath();let s=0;for(let i=0;i<=500;i++){const x=x0+i*(x1-x0)/500,y=Math.max(y0,Math.min(y1,f.f(x)));s?c.lineTo(X(x),Y(y)):c.moveTo(X(x),Y(y));s=1}c.stroke();c.fillStyle=f.c;c.fillText(f.l,W-120,28+k*16)});
+if(y0<-3&&y1>=-3){c.setLineDash([5,4]);c.strokeStyle='#999';c.beginPath();c.moveTo(m,Y(-3.0103));c.lineTo(W-12,Y(-3.0103));c.stroke();c.setLineDash([])}}
+const fn=[1,2,3,4].map(n=>({l:'n='+n,c:col[n-1],f:x=>db(mag(x,n))}));
+plot($('c1'),fn,-4,4,-40,0,'x = 2Qδ','Gain (dB, normalised) — dashed: −3 dB');
+plot($('c2'),[1,2,3,4].map(n=>({l:'n='+n,c:col[n-1],f:x=>mag(x,n)})),-4,4,0,1,'x = 2Qδ','Normalised linear gain');
+plot($('c3'),[{l:'sync n=2',c:col[1],f:x=>db(mag(x,2))},{l:'stagger',c:col[2],f:x=>db(2/Math.sqrt(4+Math.pow(x,4)))}],-4,4,-30,0,'x = 2Qδ','Gain (dB, normalised)');
+let t='<table><tr><th>n</th><th>BW<sub>n</sub>/BW<sub>1</sub></th><th>Q<sub>n</sub>/Q</th><th>BW at −60 dB / BW<sub>1</sub></th><th>Shape factor</th></tr>',b='';
+for(let n=1;n<=5;n++){const s=S(n),w=X60(n);t+=`<tr><td>${n}</td><td>${s.toFixed(4)}</td><td>${(1/s).toFixed(3)}</td><td>${w.toFixed(2)}</td><td>${(w/s).toFixed(1)}</td></tr>`;b+=`<div class="bar" style="width:${s*100}%">n=${n}: ${(s*100).toFixed(1)}% of BW₁</div>`}
+$('shr').innerHTML=t+'</table>';let t2='<table><tr><th>n</th><th>BW<sub>n</sub>/BW<sub>1</sub></th></tr>';for(let n=1;n<=5;n++)t2+=`<tr><td>${n}</td><td>${S(n).toFixed(4)}</td></tr>`;$('shrtab').innerHTML=t2+'</table>';$('bars').innerHTML=b;
+const D={n:3,f:10.7,q:50,a:10},ids=['n','f','q','a'];
+function sim(){ids.forEach(i=>{D[i]=+$(i).value;$('v'+i).textContent=D[i]});const {n,f,q,a}=D,bw1=f/q,bwn=bw1*S(n),A=db(a);
+plot($('simcv'),[{l:'1 stage',c:col[1],f:x=>A+db(mag(x,1))},{l:'n='+n,c:col[2],f:x=>n*A+db(mag(x,n))}],-4,4,n*A-60,Math.max(A,n*A)+5,'x = 2Qδ (f = f0 + x·BW1/2)','Gain (dB)');
+$('out').innerHTML=[['Single-stage BW',(bw1*1000).toFixed(2)+' kHz'],['n-stage BW',(bwn*1000).toFixed(2)+' kHz'],['Shrinkage factor',S(n).toFixed(4)],['Total gain',(n*A).toFixed(2)+' dB'],['Effective Q',(f/bwn).toFixed(2)],['−3 dB frequencies',(f-bwn/2).toFixed(4)+' / '+(f+bwn/2).toFixed(4)+' MHz']].map(r=>`<div>${r[0]}<b>${r[1]}</b></div>`).join('')}
+ids.forEach(i=>$(i).oninput=sim);$('rst').onclick=()=>{D.n=3;ids.forEach((i,k)=>$(i).value=[3,10.7,50,10][k]);sim()};sim();
+const Q=[
+['Easy','Cascading n identical synchronously tuned stages makes the overall bandwidth:',['Larger','Smaller','Unchanged','Equal to n×BW₁'],1,'Each stage adds roll-off, so BW shrinks by √(2^(1/n)−1).'],
+['Easy','BW₁ = 200 kHz. BW of two synchronous stages is about:',['141.4 kHz','128.7 kHz','100 kHz','200 kHz'],1,'200×0.6436 = 128.7 kHz. 141.4 is 200/√2, a common trap.'],
+['Easy','Three stages with 12 dB each give a total gain of:',['4 dB','1728 dB','36 dB','12 dB'],2,'dB gains add: 3×12 = 36 dB. 12³ would be for linear gains.'],
+['Moderate','Q = 50 single stage. Effective Q of two synchronous stages is about:',['32.2','50','77.7','100'],2,'Q₂ = 50/0.6436 = 77.7.'],
+['Moderate','The main cause of oscillation in a high-gain tuned amplifier is:',['Emitter bypass','Feedback through C_bc','Coupling capacitor','DC supply'],1,'C_bc feeds the collector signal back to the base; neutralization cancels it.'],
+['Moderate','A maximally flat stagger-tuned pair of single-tuned stages (each BW₁) has BW equal to:',['BW₁','√2·BW₁','2·BW₁','BW₁/√2'],1,'From |A|∝1/√(4+x⁴): −3 dB at x=√2, so BW = √2·BW₁.'],
+['Moderate','Loading the tank with the next stage\'s input resistance will:',['Raise Q','Lower Q and widen BW','Not change BW','Increase f₀ only'],1,'R_eff falls, so Q_L falls and BW = f₀/Q_L rises.'],
+['Moderate','Shrinkage factor for n = 4 is closest to:',['0.386','0.510','0.435','0.644'],2,'√(2^(1/4)−1) = √0.1892 = 0.435.'],
+['Difficult','At the single-stage −3 dB frequency, the gain of 3 identical stages relative to peak is about:',['−3 dB','−6 dB','−9 dB','−27 dB'],2,'At x=1 each stage is −3.01 dB, so three give −9.03 dB.'],
+['Difficult','Stage gains are 40 dB and 26 dB. Total linear gain is closest to:',['66','2 000 (≈ 66 dB)','1 040','2 000 000'],1,'66 dB = 10^(66/20) ≈ 1995. Linear: 100×20 = 2000.']];
+function render(){$('qs').innerHTML=Q.map((q,i)=>`<div class="q" id="q${i}"><b>Q${i+1} (${q[0]}).</b> ${q[1]}${q[2].map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"> ${'ABCD'[j]}. ${o}</label>`).join('')}<div class="ex" id="e${i}"></div></div>`).join('');$('score').textContent=''}
+$('chk').onclick=()=>{let s=0;Q.forEach((q,i)=>{const r=document.querySelector(`input[name=q${i}]:checked`),d=$('q'+i),e=$('e'+i);e.style.display='block';
+if(!r){d.className='q na';e.innerHTML='<b>Unanswered.</b> Correct: '+'ABCD'[q[3]]+'. '+q[4]}else if(+r.value===q[3]){s++;d.className='q ok';e.innerHTML='<b>Correct.</b> '+q[4]}else{d.className='q bad';e.innerHTML='<b>Incorrect.</b> Correct: '+'ABCD'[q[3]]+'. '+q[4]}});
+$('score').textContent=`Score: ${s}/10 (${s*10}%)`};
+$('rq').onclick=render;render();
+
+plot($('c4'),[{l:'vin',c:col[0],f:t=>0.2*Math.sin(2*Math.PI*t)},{l:'vout at f0',c:col[1],f:t=>Math.sin(2*Math.PI*t+Math.PI)},{l:'vout, x=3',c:col[2],f:t=>5*0.2/Math.sqrt(10)*Math.sin(2*Math.PI*t+Math.PI-Math.atan(3))}],0,2,-1.2,1.2,'time (cycles of the input)','Voltage (V)');
+const G=[
+['Easy','L = 1 µH, C = 100 pF. f₀ is:',['15.9 MHz','1.59 MHz','159 MHz','25.2 MHz'],0,'f₀ = 1/(2π√(1e-6·1e-10)) = 15.9 MHz. B and C are decade slips; D forgets 2π (1/√LC would be 100 MHz, not 25.2).'],
+['Easy','BW₁ = 60 kHz; n = 3 synchronous stages. BW₃ is:',['30.6 kHz','42.4 kHz','38.6 kHz','20 kHz'],0,'60×0.5098 = 30.6 kHz. B uses n=1 factor 1/√2, C uses the n=2 factor, D uses 1/n (wrong).'],
+['Moderate','Smallest n for BWₙ/BW₁ ≤ 0.5 is:',['2','3','4','5'],2,'n=3 gives 0.5098 (>0.5); n=4 gives 0.4350. A and B fail the limit; D works but is not the smallest.'],
+['Moderate','Each stage has 15 dB gain; 4 stages. Total gain is:',['60 dB','15⁴ dB','30 dB','4 dB'],0,'dB add: 4×15 = 60 dB. B multiplies dB values (wrong); C and D are arbitrary.'],
+['Moderate','R_p = 30 kΩ, next-stage R_in = 60 kΩ, ω₀L = 500 Ω. Loaded Q is:',['20','40','60','90'],1,'R_eff = 30k||60k = 20 kΩ; Q_L = 20000/500 = 40. C is the unloaded Q; A ignores the 500 Ω scale; D adds resistors in series.'],
+['Moderate','f₀ = 455 kHz, Q = 40 per stage, 2 synchronous stages. BW₂ is:',['7.32 kHz','8.04 kHz','11.4 kHz','5.69 kHz'],0,'BW₁ = 455/40 = 11.375 kHz; ×0.6436 = 7.32 kHz. B uses 1/√2, C is a single stage, D divides by 2.'],
+['Difficult','Two synchronous stages; offset where 2Qδ = 3. Gain relative to peak:',['−10 dB','−20 dB','−40 dB','−3 dB'],1,'Each stage 1/√10 (−10 dB); two give −20 dB. A is one stage; C squares twice; D is the band edge.'],
+['Difficult','A maximally flat stagger pair uses two stages with BW₁ = 100 kHz. Overall BW is:',['100 kHz','141 kHz','200 kHz','70.7 kHz'],1,'BW = √2·BW₁ = 141 kHz. A ignores the second stage; C sums the bandwidths; D divides instead of multiplying.'],
+['Difficult','As synchronous stages are added, which is true?',['BW increases','Shape factor decreases','Q_n decreases','f₀ shifts down'],1,'Skirts steepen, so shape factor falls (1000, 49.1, 19.5, 12.7 for n=1 to 4). A and C are reversed; D is wrong because f₀ is fixed by L and C.'],
+['Difficult','g_m = 5 mS, R_eff = 20 kΩ, 2 stages. Total gain (dB) is:',['40','80','160','20'],1,'A₀ = 100 per stage; total 10⁴ = 80 dB. A is one stage (40 dB); C doubles 80 dB wrongly; D uses 20 dB per decade of one gain only.']];
+function mk(box,data,pre,chk,rst,sc){const r=()=>{$(box).innerHTML=data.map((q,i)=>`<div class="q" id="${pre}${i}"><b>Q${i+1} (${q[0]}).</b> ${q[1]}${q[2].map((o,j)=>`<label><input type="radio" name="${pre}${i}" value="${j}"> ${'ABCD'[j]}. ${o}</label>`).join('')}<div class="ex" id="${pre}e${i}"></div></div>`).join('');$(sc).textContent=''};
+$(chk).onclick=()=>{let n=0;data.forEach((q,i)=>{const a=document.querySelector(`input[name=${pre}${i}]:checked`),d=$(pre+i),e=$(pre+'e'+i);e.style.display='block';
+if(!a){d.className='q na';e.innerHTML='<b>Unanswered.</b> Correct: '+'ABCD'[q[3]]+'. '+q[4]}else if(+a.value===q[3]){n++;d.className='q ok';e.innerHTML='<b>Correct.</b> '+q[4]}else{d.className='q bad';e.innerHTML='<b>Incorrect.</b> Correct: '+'ABCD'[q[3]]+'. '+q[4]}});$(sc).textContent=`Score: ${n}/${data.length} (${n*100/data.length}%)`};$(rst).onclick=r;r()}
+mk('qs2',G,'g','chk2','rq2','score2');
+</script></body></html>
